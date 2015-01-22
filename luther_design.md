@@ -14,8 +14,10 @@ By end of w2d1 (Jan 20, 2015), you should be able to complete the following form
 
 They are classified as *Documentary - Political* in BoxOfficeMojo, look at:
 [BoxOfficeMojo political documentaries](http://boxofficemojo.com/genres/chart/?id=politicaldoc.htm "BoxOfficeMojo political documentaries")
+
 There is a list called *Most Popular Documentaries* on IMDB:
 [IMDB Documentaries](http://www.imdb.com/search/title?title_type=documentary&sort=moviemeter,asc "IMDB Documentaries")
+
 I could only find the list of top 100 documentaries on RottenTomatoes:
 [Top 100 Documentary Movies on Rotten](http://www.rottentomatoes.com/top/bestofrt/top_100_documentary_movies/?category=8 "Top 100 Documentaries on Rotten")
 

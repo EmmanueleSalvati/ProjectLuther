@@ -7,7 +7,7 @@ import re
 
 def table_from_soup(soup_obj):
     """Given a BeautifulSoup object in BoxOfficeMojo, returns the movies'
-    table"""
+    table... WRONG!!"""
 
     nav_tabs = soup_obj.find(class_="nav_tabs")
     movie_table = (nav_tabs.findNextSibling().findNextSibling().
@@ -16,20 +16,7 @@ def table_from_soup(soup_obj):
     return movie_table
 
 
-def find_following_table(soup_tag):
-    """Given an object of type <class 'bs4.element.Tag'>,
-    find the first table after it"""
-
-    next_tag = soup_tag.findNextSibling('table')
-    if next_tag:
-        return next_tag
-    else:
-        next_tag = find_following_table(next_tag)
-
-    return next_tag
-
-
-def get_movie_links_from_table(movie_table):
+def movie_links_from_table(movie_table):
     """Creates and returns a dictionary (movie title): (movie link);
 
     It takes a soup table as input, it retrieves all the links and
@@ -44,6 +31,19 @@ def get_movie_links_from_table(movie_table):
             movies[links.text] = 'boxofficemojo.com' + link
 
     return movies
+
+
+def find_following_table(soup_tag):
+    """Given an object of type <class 'bs4.element.Tag'>,
+    find the first table after it"""
+
+    next_tag = soup_tag.findNextSibling('table')
+    if next_tag:
+        return next_tag
+    else:
+        next_tag = find_following_table(next_tag)
+
+    return next_tag
 
 
 class movie(object):
