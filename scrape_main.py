@@ -4,6 +4,7 @@ import sys
 sys.path.append('/Users/JerkFace/Metis/Projects/Luther/')
 
 import scrape_utils
+import BoxOffice_utils
 import urllib2
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -18,8 +19,8 @@ def list_links(url, pklname):
 
     if not url:
         url = sys.argv[1]
-    firefox = scrape_utils.driver_with_url(url)
-    links_dict = scrape_utils.urls_dict(firefox)
+    firefox = BoxOffice_utils.driver_with_url(url)
+    links_dict = BoxOffice_utils.urls_dict(firefox)
     with open(pklname, 'w') as pklfile:
         pkl.dump(links_dict, pklfile)
 
@@ -39,8 +40,8 @@ if __name__ == '__main__':
 
     # Scrape the table and put it into a dictionary
     nav_tabs = soup.find(class_='nav_tabs')
-    movie_table = scrape_utils.find_following_table(nav_tabs)
-    movie_dict = scrape_utils.table_to_dict(movie_table)
+    movie_table = BoxOffice_utils.find_following_table(nav_tabs)
+    movie_dict = BoxOffice_utils.table_to_dict(movie_table)
 
     # Put dictionary into a Dataframe
     movies = pd.DataFrame.from_dict(movie_dict, orient='index')
