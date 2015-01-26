@@ -8,38 +8,36 @@ import numpy as np
 import sys
 reload(sys)
 sys.setdefaultencoding('latin-1')
+from time import sleep
+import pickle as pkl
 
 
-def click_next(firefox):
+def click_next(buttons):
     """Find the Next button and click it"""
     # firefox = webdriver.Firefox()
     # firefox.get("http://www.imdb.com/search/"
     #             "title?at=0&sort=moviemeter&title_type=documentary")
 
-    buttons = firefox.find_elements_by_class_name('pagination')
-    if len(buttons) == 0:
-        print "No Next button found!"
-
-    for button in buttons:
-        next_button = button.find_element_by_tag_name('a')
-        next_string_u = next_button.text
+    prev_next = buttons.find_elements_by_tag_name('a')
+    for button in prev_next:
+        next_string_u = button.text
         if re.match('Next', next_string_u):
             print 'Changing page...'
-            next_button.click()
+            button.click()
             break
         else:
             continue
+    # print len(prev_next)
+    return prev_next
 
 
 def movies_list(url):
     """Input: current url; output the list of movies"""
 
-    url = firefox.current_url
     page = urllib2.urlopen(url)
     soap = BeautifulSoup(page)
     movies = soap.findAll(class_='even detailed')
     movies.extend(soap.findAll(class_='odd detailed'))
-    # print len(movies)
 
     return movies
 
@@ -72,22 +70,24 @@ def get_year(cell_soap):
 def get_user_rating(cell_soap):
     """Input: a cell soap from IMDB; output: movie user rating"""
 
-    # ratings = cell_soap.div.find_all('span', {'class': 'rating-rating'})
-    # rating = cell_soap.div.div.get('title')
-    # full_string = rating.split()
-    # return full_string[3]
+    try:
+        rating = cell_soap.find('span', {'class': 'rating-rating'})
+        return str(rating.span.text)
 
-    rating = cell_soap.find('span', {'class': 'rating-rating'})
-    return str(rating.span.text)
+    except AttributeError:
+        return np.nan
 
 
 def get_num_voters(cell_soap):
     """Input: a cell soap from IMDB; output: movie number of voters"""
 
-    rating = cell_soap.div.div.get('title')
-    full_string = rating.split()
+    try:
+        rating = cell_soap.div.div.get('title')
+        full_string = rating.split()
 
-    return full_string[4].replace('(', '').replace(',', '')
+        return full_string[4].replace('(', '').replace(',', '')
+    except AttributeError:
+        return np.nan
 
 
 def name_and_link(list_of_names):
@@ -127,6 +127,10 @@ def get_directors_and_actors_list(cell_soap):
 
     children_list = []  # tmp list
     movie_credits = cell_soap.find('span', attrs={'class': 'credit'})
+
+    if not movie_credits:
+        return float('nan'), float('nan')
+
     for credit in movie_credits.children:
         children_list.append(credit)
 
@@ -162,11 +166,12 @@ def get_genres(cell_soap):
 
     genres = []
     movie_genres = cell_soap.find('span', {'class': 'genre'})
+    if not movie_genres:
+        return np.nan
     for genre in movie_genres:
         try:
             genres.append(str(genre.text))
         except AttributeError:
-            # print 'type is wrong', genre
             continue
 
     return genres
@@ -176,8 +181,13 @@ def get_runtime(cell_soap):
     """Input: a cell soap movie from IMDB;
     output: movie runtime"""
 
-    runtime = cell_soap.find('span', {'class': 'runtime'})
-    return str(runtime.text)
+    try:
+        runtime = cell_soap.find('span', {'class': 'runtime'})
+        return str(runtime.text)
+
+    except AttributeError:
+        runtime = np.nan
+        return runtime
 
 
 def get_certificate(cell_soap):
@@ -196,9 +206,6 @@ def get_certificate(cell_soap):
 def list_to_dict(movies_list):
     """Give a list of soap objects; return a dictionary"""
 
-    # c4 = movies_list[26]
-    # cells = c4.findAll('td')
-
     movie_dict = {}
 
     for movie_cell in movies_list:
@@ -208,18 +215,25 @@ def list_to_dict(movies_list):
         movie = cells[2]
 
         money = np.nan
-        if len(movie) > 3:
+        if len(cells) > 3:
             money = str(cells[3].find(text=True))
 
         title = get_title(movie)
-        print title
+        # print title
         link = get_link(movie)
         year = get_year(movie)
         rating = get_user_rating(movie)
         voters = get_num_voters(movie)
         (dirs, acts) = get_directors_and_actors_list(movie)
-        dir_names = directors_names(dirs)
-        act_names = directors_names(acts)
+        try:
+            dir_names = directors_names(dirs)
+        except TypeError:
+            print 'no directors'
+            dir_names = np.nan
+        try:
+            act_names = directors_names(acts)
+        except TypeError:
+            act_names = np.nan
         genres = get_genres(movie)
         runtime = get_runtime(movie)
         certificate = get_certificate(movie)
@@ -231,17 +245,77 @@ def list_to_dict(movies_list):
     return movie_dict  # , movie
 
 
-if __name__ == '__main__':
+def get_IMDB_list(url=None):
+    """returns a list of dictionaries
+    IMDB link hardocoded here"""
+
     firefox = webdriver.Firefox()
+
     # firefox.get("http://www.imdb.com/search/"
     #             "title?at=0&sort=moviemeter&title_type=documentary")
 
-    # I think I need a while loop here...
+    if url:
+        firefox.get(url)
+    else:
+        firefox.get('http://www.imdb.com/search/'
+                    'title?at=0&sort=boxoffice_gross_us&title_type='
+                    'documentary')
+    print firefox
+    all_movies_list = []
 
-    firefox.get('http://www.imdb.com/search/'
-                'title?at=0&sort=boxoffice_gross_us&title_type=documentary')
-
+    buttons = firefox.find_element_by_class_name('pagination')
+    prev_next = buttons.find_elements_by_tag_name('a')
     movies = movies_list(firefox.current_url)
     movie_dict = list_to_dict(movies)
-    # click_next(firefox)
-    # firefox.close()
+    all_movies_list.append(movie_dict)
+    click_next(buttons)
+    sleep(3)
+    print firefox.current_url
+    buttons = firefox.find_element_by_class_name('pagination')
+    prev_next = buttons.find_elements_by_tag_name('a')
+
+    counter = 0
+    while len(prev_next) == 2 and counter < 20:
+        movies = movies_list(firefox.current_url)
+        movie_dict = list_to_dict(movies)
+        all_movies_list.append(movie_dict)
+        counter += 1
+        click_next(buttons)
+        sleep(3)
+        print firefox.current_url
+        buttons = firefox.find_element_by_class_name('pagination')
+        prev_next = buttons.find_elements_by_tag_name('a')
+
+    last_url = firefox.current_url
+    firefox.close()
+
+    return all_movies_list, last_url
+
+
+def unpack_movie_list(movie_list):
+    """Takes a list of dictionaries and returns one big dictionary"""
+
+    movie_dict = {}
+    for movies in movie_list:
+        movie_dict.update(movies)
+
+    return movie_dict
+
+
+def create_intermediate_pickles():
+    """Loops over all the pages and returns a pickle file for every 20 pages,
+    i.e. every 20 * 50 movies"""
+
+    # url = ('http://www.imdb.com/search/'
+    #        'title?at=0&sort=boxoffice_gross_us&title_type='
+    #        'documentary')
+
+    url = ('http://www.imdb.com/search/'
+           'title?at=0&sort=boxoffice_gross_us&start=17901&title_type='
+           'documentary')
+
+    for i in range(17, 182):
+        with open('IMDB_%s.pkl' % i, 'w') as pklfile:
+            movies_list, url = get_IMDB_list(url)
+            movies = unpack_movie_list(movies_list)
+            pkl.dump(movies, pklfile)

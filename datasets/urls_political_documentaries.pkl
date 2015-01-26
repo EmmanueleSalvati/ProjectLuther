@@ -1,0 +1,10 @@
+(dp0
+S'#101-125'
+p1
+S'http://boxofficemojo.com/genres/chart/?view=main&sort=gross&order=DESC&pagenum=2&id=politicaldoc.htm'
+p2
+sS'first'
+p3
+S'http://boxofficemojo.com/genres/chart/?id=politicaldoc.htm'
+p4
+s.
