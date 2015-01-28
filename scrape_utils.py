@@ -6,7 +6,6 @@ def money_to_int(moneystring):
     """Input: a string like '$33,449,086';
     Output: 33449086"""
 
-    # return int(moneystring.replace(',', '').replace('$', ''))
     return moneystring.replace(',', '').replace('$', '')
 
 
