@@ -10,6 +10,7 @@ reload(sys)
 sys.setdefaultencoding('latin-1')
 from time import sleep
 import pickle as pkl
+import pandas as pd
 
 
 def click_next(buttons):
@@ -319,3 +320,130 @@ def create_intermediate_pickles():
             movies_list, url = get_IMDB_list(url)
             movies = unpack_movie_list(movies_list)
             pkl.dump(movies, pklfile)
+
+
+def get_pickles(directory):
+    """From a directory, returns a big fat dictionary of movies"""
+
+    big_fat_movie_dict = {}
+    import os
+    pickle_list = os.listdir(directory)
+    pickle_list.remove('IMDB_24.pkl')
+    pickle_list.remove('urls_documentaries.pkl')
+    pickle_list.remove('urls_political_documentaries.pkl')
+    pickle_list.remove('BoxOfficeMojo_documentaries_DataFrame.pkl')
+    pickle_list.remove('BoxOfficeMojo_political_documentaries_DataFrame.pkl')
+
+    for IMDBfile in pickle_list:
+        with open(str(directory) + str(IMDBfile)) as pklfile:
+            tmp_dict = pkl.load(pklfile)
+            big_fat_movie_dict.update(tmp_dict)
+
+    return big_fat_movie_dict
+
+
+##### DataFrame-related functions
+def dict_to_dataframe(movie_dict):
+    """Input: IMDB movies dictionary; it returns a pandas data frame"""
+
+    movies = pd.DataFrame.from_dict(movie_dict, orient='index')
+    movies.columns = ['Rank', 'TotalGross', 'IMDBLink', 'RelYear',
+                      'UsersRating', 'NumVoters', 'Directors', 'Actors',
+                      'Genres', 'RunTime', 'Rated']
+
+    return movies
+
+
+def str_to_dollars(pd_series):
+    """Transform money to floats"""
+
+    dollars = []
+    for elem in pd_series:
+        if type(elem) == str and '$' in elem and 'K' in elem:
+            elem = float(elem.replace('$', '').replace('K', ''))
+        elif type(elem) == str and '$' in elem and 'M' in elem:
+            elem = float(elem.replace('$', '').replace('M', ''))
+            elem = 1000 * elem
+        elif type(elem) == str and '$' in elem:
+            elem = float(elem.replace('$', ''))
+            elem = elem / 1000
+        elif type(elem) == str and '-' in elem:
+            elem = np.nan
+        dollars.append(elem)
+
+    return dollars
+
+
+def str_to_year(pd_series):
+    """Transorms year to int"""
+
+    years = []
+    for elem in pd_series:
+        if not elem.isdigit():
+            elem = np.nan
+        else:
+            elem = int(elem)
+        years.append(elem)
+
+    return years
+
+
+def str_to_ratings(pd_series):
+    """Transforms rating to float"""
+
+    ratings = []
+    for elem in pd_series:
+        if type(elem) == str and '.' not in elem:
+            elem = np.nan
+        elif type(elem) == str and '.' in elem:
+            elem = float(elem)
+        elif elem != elem:
+            elem = np.nan
+        ratings.append(elem)
+
+    return ratings
+
+
+def str_to_voters(pd_series):
+    """Transforms voters to int"""
+
+    voters = []
+    for elem in pd_series:
+        if type(elem) == str and elem.isdigit():
+            elem = int(elem)
+        elif type(elem) == str and not elem.isdigit():
+            elem = np.nan
+        elif elem != elem:
+            elem = np.nan
+        voters.append(elem)
+
+    return voters
+
+
+def str_to_rank(pd_series):
+    """Transforms Rank to int"""
+
+    rank = []
+    for elem in pd_series:
+        if type(elem) == str and '.' in elem:
+            elem = int(float(elem))
+        elif elem != elem:
+            elem = np.nan
+        rank.append(elem)
+
+    return rank
+
+
+def str_to_runtime(pd_series):
+    """Transforms RunTime to int"""
+
+    rtime = []
+    for elem in pd_series:
+        if type(elem) == str and 'mins.' in elem:
+            elem = elem.replace(' mins.', '')
+            elem = int(float(elem))
+        elif elem != elem:
+            elem = np.nan
+        rtime.append(elem)
+
+    return rtime

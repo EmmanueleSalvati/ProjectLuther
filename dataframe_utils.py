@@ -13,7 +13,7 @@ def str_to_datetime(datestr):
 
 
 def find_non_numeric(pd_series):
-    """Turns a dast string into a zero"""
+    """Turns a dash string into a zero"""
 
     numeric = []
     for elem in pd_series:
@@ -32,10 +32,6 @@ def polish_dataframe(df):
     df['OpenGross'] = df['OpenGross'].apply(int)
     df['Rank'] = df['Rank'].apply(int)
     df['TotalTheaters'] = find_non_numeric(df['TotalTheaters'])
-    # try:
-    #     df['TotalTheaters'] = df['TotalTheaters'].apply(int)
-    # except ValueError:
-    #     print 'Found non-numeric value'
 
     return df
 
